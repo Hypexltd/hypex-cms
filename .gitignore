@@ -1,0 +1,16 @@
+library/
+/vendor
+settings.php
+.project/
+.vagrant/
+.idea/
+cache/
+web/swagger-ui/
+custom
+.DS_Store
+web/theme/custom
+node_modules
+results.xml
+containers/
+web/dist
+cypress/videos/

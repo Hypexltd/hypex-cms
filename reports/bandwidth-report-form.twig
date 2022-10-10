@@ -1,0 +1,139 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{% trans "Report: Bandwidth" %} | {% endblock %}
+
+{% block actionMenu %}
+    {% include "report-schedule-buttons.twig" %}
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <span>{% trans "Bandwidth" %}</span>
+        </div>
+
+        {% include "report-selector.twig" %}
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilterCustom card bg-light mb-3">
+                    <div class="FilterDiv card-body" id="bandwidth">
+                        <form class="form-inline">
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.dateMonth("bandwidthFromDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.dateMonth("bandwidthToDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            <div class="w-100">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData card pt-3 d-block">
+                    <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
+                    <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        $(function () {
+            $('[data-toggle="popover"]').popover();
+        });
+
+        var reportChart = null;
+        var imageLoader = $("#imageLoader");
+
+        function setReport() {
+
+            imageLoader.show();
+            $.ajax({
+                type: "get",
+                url: "{{ url_for("report.data", {name: reportName}) }}",
+                cache: false,
+                dataType: "json",
+                data: $("#bandwidth").find("form").serialize(),
+                success: function(response) {
+
+                    setTimeout(function() {
+                        $("#applyBtn").removeClass('disabled');
+                    }, 300);
+
+                    imageLoader.hide();
+                    if (reportChart !== undefined && reportChart !== null) {
+                        reportChart.destroy();
+                    }
+
+                    if (!response.extra.hasChartData) {
+                        return;
+                    }
+
+                    // Create our chart
+                    reportChart = new Chart($("#reportChart"), response.extra.chart);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+
+            // Init
+            var applyBtn = $("#applyBtn");
+            imageLoader.hide();
+
+            // Apply
+            applyBtn.click(function () {
+                setReport();
+            });
+        });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,388 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{% trans "Report: Proof of Play" %} | {% endblock %}
+
+{% block actionMenu %}
+    {% include "report-schedule-buttons.twig" %}
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <span>{% trans "Proof of Play" %}</span>
+        </div>
+
+        {% include "report-selector.twig" %}
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
+                <div class="XiboFilterCustom card bg-light mb-3">
+                    <div class="FilterDiv card-body" id="proofofplayReport">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Range" %}{% endset %}
+                            {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set today %}{% trans "Today" %}{% endset %}
+                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
+                            {% set thisweek %}{% trans "This Week" %}{% endset %}
+                            {% set thismonth %}{% trans "This Month" %}{% endset %}
+                            {% set thisyear %}{% trans "This Year" %}{% endset %}
+                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
+                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
+                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
+                            {% set options = [
+                                { filterName: "", reportFilter: range },
+                                { filterName: "today", reportFilter: today },
+                                { filterName: "yesterday", reportFilter: yesterday },
+                                { filterName: "thisweek", reportFilter: thisweek },
+                                { filterName: "thismonth", reportFilter: thismonth },
+                                { filterName: "thisyear", reportFilter: thisyear },
+                                { filterName: "lastweek", reportFilter: lastweek },
+                                { filterName: "lastmonth", reportFilter: lastmonth },
+                                { filterName: "lastyear", reportFilter: lastyear },
+                            ] %}
+                            {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
+
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
+
+                            {% set title %}{% trans "Time" %}{% endset %}
+                            {{ inline.time("statsFromDtTime", title, "00:00", "", "stats-from-dt-time") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+
+                            {% set title %}{% trans "Time" %}{% endset %}
+                            {{ inline.time("statsToDtTime", title, "00:00", "", "stats-to-dt-time") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("layout.search") },
+                                { name: "data-search-term", value: "layout" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
+                            ] %}
+
+                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", null, "layoutId", "layout", "", "pagedSelect", "", "l", "", attributes) }}
+
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("library.search") },
+                                { name: "data-search-term", value: "media" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "name" }
+                            ] %}
+                            {% set title %}{% trans "Media" %}{% endset %}
+                            {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", null, "mediaId", "name", "", "pagedSelect", "", "m", "", attributes) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set widget %}{% trans "Widget" %}{% endset %}
+                            {% set event %}{% trans "Event" %}{% endset %}
+                            {% set options = [
+                                { typeid: "", type: null },
+                                { typeid: "layout", type: layout },
+                                { typeid: "media", type: media },
+                                { typeid: "widget", type: widget },
+                                { typeid: "event", type: event }
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
+
+                            {% set title %}{% trans "Tags from" %}{% endset %}
+                            {% set dg %}{% trans "Display Group" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set options = [
+                                { tagsTypeid: "dg", tagsType: dg },
+                                { tagsTypeid: "layout", tagsType: layout },
+                                { tagsTypeid: "media", tagsType: media }
+                            ] %}
+                            {{ inline.dropdown("tagsType", "single", title, "dg", options, "tagsTypeid", "tagsType") }}
+
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set exactMatchTitle %}{% trans "Should Tags filter by exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactMatchTitle, logicalOperatorTitle) }}
+                            {% endif %}
+
+                            <div class="w-100">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData card pt-3">
+                    <table id="stats" class="table table-striped" data-state-preference-name="proofOfPlayGrid">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Display ID" %}</th>
+                            <th>{% trans "Display" %}</th>
+                            <th>{% trans "Layout ID" %}</th>
+                            <th>{% trans "Layout" %}</th>
+                            <th>{% trans "Widget ID" %}</th>
+                            <th>{% trans "Media" %}</th>
+                            <th>{% trans "Tag" %}</th>
+                            <th>{% trans "Number of Plays" %}</th>
+                            <th>{% trans "Total Duration" %}</th>
+                            <th>{% trans "Total Duration (s)" %}</th>
+                            <th title="{{ "NB: proof of play records which span your range are returned in this report."|trans }}">{% trans "First Period Shown" %}</th>
+                            <th title="{{ "NB: proof of play records which span your range are returned in this report."|trans }}">{% trans "Last Period Shown" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var warning = $("#applyWarning");
+
+            // Grid
+            var table = $("#stats").DataTable({
+                "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
+                serverSide: true,
+                stateSave: true,
+                deferLoading: 0,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
+                drawCallback: function( settings ) {
+                    setTimeout(function() {
+                        $("#applyBtn").removeClass('disabled');
+                    }, 300);
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ url_for("report.data", {name: reportName}) }}",
+                    "data": function (d) {
+                        $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "type"},
+                    {"data": "displayId"},
+                    {"data": "display"},
+                    {"data": "layoutId"},
+                    {"data": "layout"},
+                    {"data": "widgetId"},
+                    {"data": "media"},
+                    {"data": "tag"},
+                    {"data": "numberPlays"},
+                    {
+                        "data": "duration",
+                        "render": function (data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            var durationData = moment.duration(data, "seconds");
+                            var dataM = '';
+
+                            var months = durationData.months();
+                            if (months > 0) {
+                                durationData.subtract(moment.duration(months,'months'));
+                                dataM += months + '{% trans "month" %} ';
+                            }
+
+                            var days = durationData.days();
+                            durationData.subtract(moment.duration(days,'days'));
+                            dataM += days + '{% trans "day" %} ';
+
+                            var hours = durationData.hours();
+                            durationData.subtract(moment.duration(hours,'hours'));
+                            dataM += hours + '{% trans "hr" %} ';
+
+                            var minutes = durationData.minutes();
+                            durationData.subtract(moment.duration(minutes,'minutes'));
+                            dataM += minutes + '{% trans "min" %} ';
+
+                            var seconds = durationData.seconds();
+                            dataM += seconds + '{% trans "sec" %} ';
+
+                            return  dataM;
+                        }
+                    },
+                    {"data": "duration"},
+                    {"data": "minStart"},
+                    {"data": "maxEnd"}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#stats_wrapper').find('.dataTables_buttons'));
+
+            // Apply
+            $("#applyBtn").click(function () {
+                $(this).addClass('disabled');
+                table.search($("#stats").closest(".XiboGrid").find(".FilterDiv form")).draw();
+            });
+
+            // Report Filter
+            var reportFilter = $("#reportFilter");
+
+            // Hide / Show FromDt and ToDt
+            function checkReportFilter(reportFilter) {
+                if (reportFilter.val() === '' || reportFilter.val() === undefined) {
+                    $(".stats-from-dt").show();
+                    $(".stats-to-dt").show();
+                    $(".stats-from-dt-time").show();
+                    $(".stats-to-dt-time").show();
+                } else {
+                    $(".stats-from-dt").hide();
+                    $(".stats-to-dt").hide();
+                    $(".stats-from-dt-time").hide();
+                    $(".stats-to-dt-time").hide();
+                }
+            }
+
+            // Calculate the difference of number of days of a selected range
+            var calculateDaysShowHideWarn = function() {
+
+                var fromDt = moment($("#statsFromDt").val());
+                var toDt = moment($("#statsToDt").val());
+                
+                var days = toDt.diff(fromDt, 'days');
+
+                warning.hide();
+                if ( days >= 30) {
+                    warning.show();
+                }
+                
+                return true;
+            };
+
+            $("#statsFromDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
+
+            $("#statsToDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
+
+            var checkFilterAndApply = function() {
+
+                reportFilter.off('change').change( function() {
+                    var value = reportFilter.val();
+
+                    // Hide / Show FromDt and ToDt
+                    checkReportFilter(reportFilter);
+
+                    // Hide / Show Warning
+                    warning.hide();
+                    if ( value === '') {
+                        calculateDaysShowHideWarn();
+                    } else if ( value === 'thismonth' || value === 'lastmonth' || value === 'thisyear' || value === 'lastyear') {
+                        warning.show();
+                    }
+                });
+
+                var anchorReportAddBtn = $("button#reportAddBtn");
+                var type = $("#type").val();
+                var tagsType = $("#tagsType").val();
+                var tags = $("#tags").val();
+                var exactTags = $('#exactTags').is(":checked");
+
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + type + "&tagsType=" + tagsType + "&tags=" + tags + "&exactTags=" + exactTags
+                    + "&reportName=proofofplayReport" );
+
+            };
+
+            checkReportFilter(reportFilter);
+            checkFilterAndApply();
+        });
+
+        function proofOfPlayScheduleCallback() {
+
+            var $displayId = $('#proofofplayReport #displayId');
+            var $layoutId = $('#proofofplayReport [id="layoutId[]"]');
+            var $mediaId = $('#proofofplayReport [id="mediaId[]"]');
+            var $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
+            var $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
+            var $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
+
+            appendOptions($newDisplayId, $displayId.find('option:selected').clone());
+            appendOptions($newLayoutId, $layoutId.find('option:selected').clone());
+            appendOptions($newMediaId, $mediaId.find('option:selected').clone());
+        }
+
+        function appendOptions(element, options) {
+
+            for (var i = 0; i < options.length; i++) {
+
+                var option = options[i];
+                element.append(option).trigger('change');
+                $(option).prop('selected', true);
+                element.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: option
+                    }
+                });
+            }
+        }
+    </script>
+{% endblock %}
