@@ -1,6 +1,6 @@
 # Introduction
 Hypex - Digital Signage - https://www.hypex.co.uk/
-Copyright (C) 2006-2022 Hypex Signage Ltd and Contributors.
+Copyright (C) 2006-2022 Xibo Signage Ltd and Contributors.
 
 
 
